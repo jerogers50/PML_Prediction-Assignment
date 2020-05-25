@@ -20,19 +20,10 @@ Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible t
 
 ```{r, echo=TRUE, results='hide'}
 # Load packages
-library(AppliedPredictiveModeling)
-library(caret)
-library(ElemStatLearn)
-library(pgmm)
-library(rpart)
-library(gbm)
-library(lubridate)
-library(forecast)
-library(e1071)
-library(randomForest)
-library(corrplot)
-library(rattle)
-library(modelr)
+library(caret) #version 6.0-86
+library(rpart) #version 4.1-15
+library(corrplot) #version 0.84
+library(rattle) #version 5.3.0
 
 # Download training data for this project
 getwd()
@@ -87,8 +78,7 @@ Based on the plot below, it can be determined that there is little correlation a
 ```{r, echo=TRUE}
 ncol(train)
 cor_matrix <- cor(train[, -ncol(train)])
-corrplot(cor_matrix, method = "color", type = "lower", 
-         tl.cex = .6, tl.col = rgb(0, 0, 0))
+corrplot(cor_matrix, method = "color", type = "upper", tl.cex = .6, tl.col = rgb(0, 0, 0))
 ```
 
 # Prediction Models
@@ -111,8 +101,7 @@ confusion_matrix_dt
 set.seed(1800)
 # Create Random Forest model
 control_random_forest <- trainControl(method="cv", number=3, verboseIter=FALSE)
-model_fit_rf <- train(classe ~ ., data=train, method="rf",
-                          trControl=control_random_forest)
+model_fit_rf <- train(classe ~ ., data=train, method="rf", trControl=control_random_forest)
 model_fit_rf$finalModel
 
 # Apply Randowm Forest prediction on test dataset to determine accuracy

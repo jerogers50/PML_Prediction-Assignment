@@ -21,8 +21,7 @@ Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible t
 
 ```r
 # Load packages
-library(AppliedPredictiveModeling)
-library(caret)
+library(caret) #version 6.0-86
 ```
 
 ```
@@ -34,75 +33,8 @@ library(caret)
 ```
 
 ```r
-library(ElemStatLearn)
-library(pgmm)
-library(rpart)
-library(gbm)
-```
-
-```
-## Loaded gbm 2.1.5
-```
-
-```r
-library(lubridate)
-```
-
-```
-## Warning: package 'lubridate' was built under R version 3.6.2
-```
-
-```
-## 
-## Attaching package: 'lubridate'
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     date, intersect, setdiff, union
-```
-
-```r
-library(forecast)
-```
-
-```
-## Warning: package 'forecast' was built under R version 3.6.2
-```
-
-```
-## Registered S3 method overwritten by 'quantmod':
-##   method            from
-##   as.zoo.data.frame zoo
-```
-
-```r
-library(e1071)
-library(randomForest)
-```
-
-```
-## randomForest 4.6-14
-```
-
-```
-## Type rfNews() to see new features/changes/bug fixes.
-```
-
-```
-## 
-## Attaching package: 'randomForest'
-```
-
-```
-## The following object is masked from 'package:ggplot2':
-## 
-##     margin
-```
-
-```r
-library(corrplot)
+library(rpart) #version 4.1-15
+library(corrplot) #version 0.84
 ```
 
 ```
@@ -110,32 +42,13 @@ library(corrplot)
 ```
 
 ```r
-library(rattle)
+library(rattle) #version 5.3.0
 ```
 
 ```
 ## Rattle: A free graphical interface for data science with R.
 ## Version 5.3.0 Copyright (c) 2006-2018 Togaware Pty Ltd.
 ## Type 'rattle()' to shake, rattle, and roll your data.
-```
-
-```
-## 
-## Attaching package: 'rattle'
-```
-
-```
-## The following object is masked from 'package:randomForest':
-## 
-##     importance
-```
-
-```r
-library(modelr)
-```
-
-```
-## Warning: package 'modelr' was built under R version 3.6.2
 ```
 
 ```r
@@ -200,8 +113,7 @@ ncol(train)
 
 ```r
 cor_matrix <- cor(train[, -ncol(train)])
-corrplot(cor_matrix, method = "color", type = "lower", 
-         tl.cex = .6, tl.col = rgb(0, 0, 0))
+corrplot(cor_matrix, method = "color", type = "upper", tl.cex = .6, tl.col = rgb(0, 0, 0))
 ```
 
 ![](Prediction-Assignment_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
@@ -232,34 +144,34 @@ confusion_matrix_dt
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1519  179   30   73   22
-##          B   34  635   36   15   17
-##          C   31  116  847   71   12
-##          D   79  174   98  741  137
-##          E   11   35   15   64  894
+##          A 1479  148   37   46   13
+##          B   96  751  127   80   63
+##          C   27   98  835  134   35
+##          D   59  108   21  636   82
+##          E   13   34    6   68  889
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.7878          
-##                  95% CI : (0.7771, 0.7982)
+##                Accuracy : 0.7799          
+##                  95% CI : (0.7691, 0.7905)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc > NIR] : < 2.2e-16       
 ##                                           
-##                   Kappa : 0.7312          
+##                   Kappa : 0.7214          
 ##                                           
 ##  Mcnemar's Test P-Value : < 2.2e-16       
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9074   0.5575   0.8255   0.7687   0.8262
-## Specificity            0.9278   0.9785   0.9527   0.9008   0.9740
-## Pos Pred Value         0.8332   0.8616   0.7864   0.6029   0.8773
-## Neg Pred Value         0.9618   0.9021   0.9628   0.9521   0.9614
+## Sensitivity            0.8835   0.6594   0.8138   0.6598   0.8216
+## Specificity            0.9421   0.9229   0.9395   0.9451   0.9748
+## Pos Pred Value         0.8584   0.6723   0.7396   0.7020   0.8802
+## Neg Pred Value         0.9531   0.9186   0.9598   0.9341   0.9604
 ## Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
-## Detection Rate         0.2581   0.1079   0.1439   0.1259   0.1519
-## Detection Prevalence   0.3098   0.1252   0.1830   0.2088   0.1732
-## Balanced Accuracy      0.9176   0.7680   0.8891   0.8348   0.9001
+## Detection Rate         0.2513   0.1276   0.1419   0.1081   0.1511
+## Detection Prevalence   0.2928   0.1898   0.1918   0.1540   0.1716
+## Balanced Accuracy      0.9128   0.7911   0.8767   0.8024   0.8982
 ```
 
 
@@ -267,8 +179,7 @@ confusion_matrix_dt
 set.seed(1800)
 # Create Random Forest model
 control_random_forest <- trainControl(method="cv", number=3, verboseIter=FALSE)
-model_fit_rf <- train(classe ~ ., data=train, method="rf",
-                          trControl=control_random_forest)
+model_fit_rf <- train(classe ~ ., data=train, method="rf", trControl=control_random_forest)
 model_fit_rf$finalModel
 ```
 
@@ -280,14 +191,14 @@ model_fit_rf$finalModel
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 27
 ## 
-##         OOB estimate of  error rate: 0.24%
+##         OOB estimate of  error rate: 0.18%
 ## Confusion matrix:
 ##      A    B    C    D    E  class.error
-## A 3905    0    0    0    1 0.0002560164
-## B    7 2648    3    0    0 0.0037622272
-## C    0    4 2391    1    0 0.0020868114
-## D    0    0   11 2241    0 0.0048845471
-## E    0    1    1    4 2519 0.0023762376
+## A 3904    1    0    0    1 0.0005120328
+## B    8 2649    1    0    0 0.0033860045
+## C    0    5 2391    0    0 0.0020868114
+## D    0    0    7 2244    1 0.0035523979
+## E    0    0    0    1 2524 0.0003960396
 ```
 
 ```r
@@ -302,34 +213,34 @@ confusion_matrix_rf
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1673    2    0    0    0
-##          B    1 1134    1    0    0
-##          C    0    3 1025    4    0
-##          D    0    0    0  959    2
-##          E    0    0    0    1 1080
+##          A 1674    2    0    0    0
+##          B    0 1135    2    0    0
+##          C    0    1 1024   13    0
+##          D    0    1    0  950    1
+##          E    0    0    0    1 1081
 ## 
 ## Overall Statistics
-##                                          
-##                Accuracy : 0.9976         
-##                  95% CI : (0.996, 0.9987)
-##     No Information Rate : 0.2845         
-##     P-Value [Acc > NIR] : < 2.2e-16      
-##                                          
-##                   Kappa : 0.997          
-##                                          
-##  Mcnemar's Test P-Value : NA             
+##                                           
+##                Accuracy : 0.9964          
+##                  95% CI : (0.9946, 0.9978)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc > NIR] : < 2.2e-16       
+##                                           
+##                   Kappa : 0.9955          
+##                                           
+##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9994   0.9956   0.9990   0.9948   0.9982
-## Specificity            0.9995   0.9996   0.9986   0.9996   0.9998
-## Pos Pred Value         0.9988   0.9982   0.9932   0.9979   0.9991
-## Neg Pred Value         0.9998   0.9989   0.9998   0.9990   0.9996
+## Sensitivity            1.0000   0.9965   0.9981   0.9855   0.9991
+## Specificity            0.9995   0.9996   0.9971   0.9996   0.9998
+## Pos Pred Value         0.9988   0.9982   0.9865   0.9979   0.9991
+## Neg Pred Value         1.0000   0.9992   0.9996   0.9972   0.9998
 ## Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
-## Detection Rate         0.2843   0.1927   0.1742   0.1630   0.1835
-## Detection Prevalence   0.2846   0.1930   0.1754   0.1633   0.1837
-## Balanced Accuracy      0.9995   0.9976   0.9988   0.9972   0.9990
+## Detection Rate         0.2845   0.1929   0.1740   0.1614   0.1837
+## Detection Prevalence   0.2848   0.1932   0.1764   0.1618   0.1839
+## Balanced Accuracy      0.9998   0.9980   0.9976   0.9925   0.9994
 ```
 
 After comparing results from both models, the random forest model will be used for prediction on the testing dataset. With an accuracy of ~99% and an out of bounds error percentage or ~0.2% this is the best model to use. The accuracy of the decision tree was significantly lower.

@@ -1,0 +1,132 @@
+---
+title: "Prediction Assignment Writeup"
+author: "Joel Rogers"
+date: "5/20/2020"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+# Assignment
+
+You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
+# Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+# Data Importing and Cleaning
+
+```{r, echo=TRUE, results='hide'}
+# Load packages
+library(AppliedPredictiveModeling)
+library(caret)
+library(ElemStatLearn)
+library(pgmm)
+library(rpart)
+library(gbm)
+library(lubridate)
+library(forecast)
+library(e1071)
+library(randomForest)
+library(corrplot)
+library(rattle)
+library(modelr)
+
+# Download training data for this project
+getwd()
+
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", "pml_training.csv")
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "pml_testing.csv")
+
+# The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+# Read the activity data file 
+training_data <- read.csv("pml_training.csv")
+testing_data <- read.csv("pml_testing.csv")
+head(training_data)
+head(testing_data)
+
+# Create a partition using the caret package with the training dataset on 70,30 ratio
+train_variable <- createDataPartition(training_data$classe, p = 0.7, list = FALSE)
+train <- training_data[train_variable, ]
+test <- training_data[-train_variable, ]
+dim(train)
+dim(test)
+
+# Remove variables with nearly zero variance
+near_zero_variable <- nearZeroVar(train)
+train <- train[, -near_zero_variable]
+test  <- test[, -near_zero_variable]
+dim(train)
+dim(test)
+
+# Remove variables with mostly NA observations
+NA_variable    <- sapply(train, function(x) mean(is.na(x))) > 0.95
+train <- train[, NA_variable==FALSE]
+test  <- test[, NA_variable==FALSE]
+dim(train)
+dim(test)
+
+head(train)
+head(test)
+
+# Remove identification / non-numerical variables
+train <- train[, -(1:5)]
+test  <- test[, -(1:5)]
+
+head(train)
+head(test)
+```
+
+# Correlation Analysis
+
+Based on the plot below, it can be determined that there is little correlation across the variables. 
+
+```{r, echo=TRUE}
+ncol(train)
+cor_matrix <- cor(train[, -ncol(train)])
+corrplot(cor_matrix, method = "color", type = "lower", 
+         tl.cex = .6, tl.col = rgb(0, 0, 0))
+```
+
+# Prediction Models
+
+For the purpose of this analysis I developed Random Forest and Decision Tree predictive models. These models were used to determine which of the two would yield more accurate predictions on the testing dataset. 
+
+```{r, echo=TRUE}
+set.seed(1800)
+# Create Decision Tree model
+model_fit_dt <- rpart(classe ~ ., data=train, method="class")
+fancyRpartPlot(model_fit_dt)
+
+# Apply Decision Tree prediction on test dataset to determine accuracy
+predict_decision_tree <- predict(model_fit_dt, newdata=test, type="class")
+confusion_matrix_dt <- confusionMatrix(predict_decision_tree, test$classe)
+confusion_matrix_dt
+```
+
+```{r, echo=TRUE}
+set.seed(1800)
+# Create Random Forest model
+control_random_forest <- trainControl(method="cv", number=3, verboseIter=FALSE)
+model_fit_rf <- train(classe ~ ., data=train, method="rf",
+                          trControl=control_random_forest)
+model_fit_rf$finalModel
+
+# Apply Randowm Forest prediction on test dataset to determine accuracy
+predict_random_forest <- predict(model_fit_rf, newdata=test)
+confusion_matrix_rf <- confusionMatrix(predict_random_forest, test$classe)
+confusion_matrix_rf
+```
+
+After comparing results from both models, the random forest model will be used for prediction on the testing dataset. With an accuracy of ~99% and an out of bounds error percentage or ~0.2% this is the best model to use. The accuracy of the decision tree was significantly lower.
+
+# Predicting with the Testing Data
+
+```{r, echo=TRUE}
+# Apply random forest predictor to testing dataset
+predict_final <- predict(model_fit_rf, newdata=testing_data)
+predict_final
+```

@@ -66,7 +66,7 @@ testing_data <- read.csv("pml_testing.csv")
 head(training_data)
 head(testing_data)
 
-# Create a partition using the caret package with the training dataset on 70,30 ratio
+# Create a partition using the training dataset
 train_variable <- createDataPartition(training_data$classe, p = 0.7, list = FALSE)
 train <- training_data[train_variable, ]
 test <- training_data[-train_variable, ]
@@ -81,7 +81,7 @@ dim(train)
 dim(test)
 
 # Remove variables with mostly NA observations
-NA_variable    <- sapply(train, function(x) mean(is.na(x))) > 0.95
+NA_variable    <- sapply(train, function(x) mean(is.na(x))) > 0.90
 train <- train[, NA_variable==FALSE]
 test  <- test[, NA_variable==FALSE]
 dim(train)
@@ -90,7 +90,7 @@ dim(test)
 head(train)
 head(test)
 
-# Remove identification / non-numerical variables
+# Remove identification / non-numerical variables. In this case it's the first 5 variables.
 train <- train[, -(1:5)]
 test  <- test[, -(1:5)]
 
@@ -113,7 +113,7 @@ ncol(train)
 
 ```r
 cor_matrix <- cor(train[, -ncol(train)])
-corrplot(cor_matrix, method = "color", type = "upper", tl.cex = .6, tl.col = rgb(0, 0, 0))
+corrplot(cor_matrix, method = "square", tl.cex = .6, tl.col = rgb(0, 0, 0))
 ```
 
 ![](Prediction-Assignment_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
@@ -144,41 +144,41 @@ confusion_matrix_dt
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1479  148   37   46   13
-##          B   96  751  127   80   63
-##          C   27   98  835  134   35
-##          D   59  108   21  636   82
-##          E   13   34    6   68  889
+##          A 1511  251   44  119   74
+##          B   42  626   33   32   68
+##          C   17   92  840   94   76
+##          D   96  118   68  669  154
+##          E    8   52   41   50  710
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.7799          
-##                  95% CI : (0.7691, 0.7905)
+##                Accuracy : 0.7402          
+##                  95% CI : (0.7288, 0.7514)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc > NIR] : < 2.2e-16       
 ##                                           
-##                   Kappa : 0.7214          
+##                   Kappa : 0.6695          
 ##                                           
 ##  Mcnemar's Test P-Value : < 2.2e-16       
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.8835   0.6594   0.8138   0.6598   0.8216
-## Specificity            0.9421   0.9229   0.9395   0.9451   0.9748
-## Pos Pred Value         0.8584   0.6723   0.7396   0.7020   0.8802
-## Neg Pred Value         0.9531   0.9186   0.9598   0.9341   0.9604
+## Sensitivity            0.9026   0.5496   0.8187   0.6940   0.6562
+## Specificity            0.8841   0.9631   0.9426   0.9114   0.9686
+## Pos Pred Value         0.7559   0.7815   0.7507   0.6054   0.8246
+## Neg Pred Value         0.9581   0.8991   0.9610   0.9383   0.9260
 ## Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
-## Detection Rate         0.2513   0.1276   0.1419   0.1081   0.1511
-## Detection Prevalence   0.2928   0.1898   0.1918   0.1540   0.1716
-## Balanced Accuracy      0.9128   0.7911   0.8767   0.8024   0.8982
+## Detection Rate         0.2568   0.1064   0.1427   0.1137   0.1206
+## Detection Prevalence   0.3397   0.1361   0.1901   0.1878   0.1463
+## Balanced Accuracy      0.8934   0.7564   0.8806   0.8027   0.8124
 ```
 
 
 ```r
 set.seed(1800)
 # Create Random Forest model
-control_random_forest <- trainControl(method="cv", number=3, verboseIter=FALSE)
+control_random_forest <- trainControl(method="cv", number=5, verboseIter=FALSE)
 model_fit_rf <- train(classe ~ ., data=train, method="rf", trControl=control_random_forest)
 model_fit_rf$finalModel
 ```
@@ -191,14 +191,14 @@ model_fit_rf$finalModel
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 27
 ## 
-##         OOB estimate of  error rate: 0.18%
+##         OOB estimate of  error rate: 0.25%
 ## Confusion matrix:
 ##      A    B    C    D    E  class.error
-## A 3904    1    0    0    1 0.0005120328
-## B    8 2649    1    0    0 0.0033860045
-## C    0    5 2391    0    0 0.0020868114
-## D    0    0    7 2244    1 0.0035523979
-## E    0    0    0    1 2524 0.0003960396
+## A 3905    1    0    0    0 0.0002560164
+## B    8 2646    3    1    0 0.0045146727
+## C    0    7 2389    0    0 0.0029215359
+## D    0    1    7 2244    0 0.0035523979
+## E    0    1    0    6 2518 0.0027722772
 ```
 
 ```r
@@ -213,34 +213,34 @@ confusion_matrix_rf
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1674    2    0    0    0
-##          B    0 1135    2    0    0
-##          C    0    1 1024   13    0
-##          D    0    1    0  950    1
-##          E    0    0    0    1 1081
+##          A 1674    0    0    0    0
+##          B    0 1137    9    0    0
+##          C    0    2 1017    7    0
+##          D    0    0    0  957    6
+##          E    0    0    0    0 1076
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9964          
-##                  95% CI : (0.9946, 0.9978)
+##                Accuracy : 0.9959          
+##                  95% CI : (0.9939, 0.9974)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc > NIR] : < 2.2e-16       
 ##                                           
-##                   Kappa : 0.9955          
+##                   Kappa : 0.9948          
 ##                                           
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            1.0000   0.9965   0.9981   0.9855   0.9991
-## Specificity            0.9995   0.9996   0.9971   0.9996   0.9998
-## Pos Pred Value         0.9988   0.9982   0.9865   0.9979   0.9991
-## Neg Pred Value         1.0000   0.9992   0.9996   0.9972   0.9998
+## Sensitivity            1.0000   0.9982   0.9912   0.9927   0.9945
+## Specificity            1.0000   0.9981   0.9981   0.9988   1.0000
+## Pos Pred Value         1.0000   0.9921   0.9912   0.9938   1.0000
+## Neg Pred Value         1.0000   0.9996   0.9981   0.9986   0.9988
 ## Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
-## Detection Rate         0.2845   0.1929   0.1740   0.1614   0.1837
-## Detection Prevalence   0.2848   0.1932   0.1764   0.1618   0.1839
-## Balanced Accuracy      0.9998   0.9980   0.9976   0.9925   0.9994
+## Detection Rate         0.2845   0.1932   0.1728   0.1626   0.1828
+## Detection Prevalence   0.2845   0.1947   0.1743   0.1636   0.1828
+## Balanced Accuracy      1.0000   0.9982   0.9947   0.9958   0.9972
 ```
 
 After comparing results from both models, the random forest model will be used for prediction on the testing dataset. With an accuracy of ~99% and an out of bounds error percentage or ~0.2% this is the best model to use. The accuracy of the decision tree was significantly lower.

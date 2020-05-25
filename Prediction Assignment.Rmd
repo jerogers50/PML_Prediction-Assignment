@@ -39,7 +39,7 @@ testing_data <- read.csv("pml_testing.csv")
 head(training_data)
 head(testing_data)
 
-# Create a partition using the caret package with the training dataset on 70,30 ratio
+# Create a partition using the training dataset
 train_variable <- createDataPartition(training_data$classe, p = 0.7, list = FALSE)
 train <- training_data[train_variable, ]
 test <- training_data[-train_variable, ]
@@ -54,7 +54,7 @@ dim(train)
 dim(test)
 
 # Remove variables with mostly NA observations
-NA_variable    <- sapply(train, function(x) mean(is.na(x))) > 0.95
+NA_variable    <- sapply(train, function(x) mean(is.na(x))) > 0.90
 train <- train[, NA_variable==FALSE]
 test  <- test[, NA_variable==FALSE]
 dim(train)
@@ -63,7 +63,7 @@ dim(test)
 head(train)
 head(test)
 
-# Remove identification / non-numerical variables
+# Remove identification / non-numerical variables. In this case it's the first 5 variables.
 train <- train[, -(1:5)]
 test  <- test[, -(1:5)]
 
@@ -78,7 +78,7 @@ Based on the plot below, it can be determined that there is little correlation a
 ```{r, echo=TRUE}
 ncol(train)
 cor_matrix <- cor(train[, -ncol(train)])
-corrplot(cor_matrix, method = "color", type = "upper", tl.cex = .6, tl.col = rgb(0, 0, 0))
+corrplot(cor_matrix, method = "square", tl.cex = .6, tl.col = rgb(0, 0, 0))
 ```
 
 # Prediction Models
@@ -100,7 +100,7 @@ confusion_matrix_dt
 ```{r, echo=TRUE}
 set.seed(1800)
 # Create Random Forest model
-control_random_forest <- trainControl(method="cv", number=3, verboseIter=FALSE)
+control_random_forest <- trainControl(method="cv", number=5, verboseIter=FALSE)
 model_fit_rf <- train(classe ~ ., data=train, method="rf", trControl=control_random_forest)
 model_fit_rf$finalModel
 
